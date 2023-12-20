@@ -1,3 +1,4 @@
+
 # extract_faces.py
 import cv2
 import os
@@ -51,3 +52,4 @@ def capturar_rostro(numeroId, nombre_empleado):
 
 # Ejemplo de uso
 # capturar_rostro(1001, "UsuarioEjemplo")
+
