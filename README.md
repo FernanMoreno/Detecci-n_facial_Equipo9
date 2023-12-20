@@ -35,5 +35,5 @@ pip install -r requirements.txt
 ```
 4. Ejecuta el script principal app.py.
 ```
-python app.py
+python menu.py
 ```
