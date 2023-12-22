@@ -6,16 +6,19 @@ from PIL import Image, ImageTk
 
 class RecognitionSystem:
     def __init__(self, app):
-        self.faces_encodings = []
-        self.faces_names = []
-        self.detener_flag = False
-        self.cap = None
-        self.app = app
+        # Inicialización de variables de la clase RecognitionSystem
+        self.faces_encodings = []  # Almacena los códigos de reconocimiento facial de las caras
+        self.faces_names = []      # Almacena los nombres asociados a las caras
+        self.detener_flag = False   # Bandera para detener el reconocimiento facial
+        self.cap = None             # Objeto de captura de video de la cámara
+        self.app = app              # Referencia a la aplicación GUI
 
     def configurar_cap(self, cap):
+        # Configura el objeto de captura de video
         self.cap = cap
 
     def cargar_imagenes_empleado_global(self, codigo_empleado):
+        # Carga las imágenes de las caras de un empleado específico y extrae sus códigos de reconocimiento facial
         carpeta_rostros = f"Data/faces/{codigo_empleado}"
 
         for file_name in os.listdir(carpeta_rostros):
@@ -23,12 +26,14 @@ class RecognitionSystem:
             image = cv2.imread(image_path)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+            # Localiza las caras en la imagen
             face_locations = face_recognition.face_locations(image)
 
             if face_locations:
                 top, right, bottom, left = face_locations[0]
                 face = image[top:bottom, left:right]
 
+                # Codifica la cara para el reconocimiento facial
                 face_encodings = face_recognition.face_encodings(face)
 
                 if face_encodings:
@@ -39,6 +44,7 @@ class RecognitionSystem:
                 print(f"No se encontraron caras en la imagen: {file_name}")
 
     def detener(self):
+        # Detiene el reconocimiento facial
         self.detener_flag = True
         if self.cap:
             self.cap.release()
@@ -46,14 +52,15 @@ class RecognitionSystem:
     def realizar_reconocimiento_facial(self):
         try:
             while not self.detener_flag:
+                # Captura un fotograma de la cámara
                 ret, frame = self.cap.read()
                 if not ret:
                     print("Error al leer el fotograma de la cámara.")
                     break
 
-                frame = cv2.flip(frame, 1)
-                orig = frame.copy()
-                faces = face_recognition.face_locations(frame)
+                frame = cv2.flip(frame, 1)  # Voltea el fotograma horizontalmente
+                orig = frame.copy()         # Copia del fotograma original
+                faces = face_recognition.face_locations(frame)  # Localiza las caras en el fotograma
 
                 recognized = False
 
@@ -86,8 +93,10 @@ class RecognitionSystem:
                                     color = (50, 50, 255)
                                     access_message = "Acceso Denegado"
 
+                                # Dibuja un rectángulo alrededor de la cara reconocida
                                 cv2.rectangle(frame, (left, bottom), (right, bottom + 30), color, -1)
                                 cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
+                                # Muestra el mensaje de acceso permitido o denegado
                                 cv2.putText(frame, access_message, (left, bottom + 25), 2, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
                                 if security_percentage is not None:
@@ -96,12 +105,15 @@ class RecognitionSystem:
                                     self.app.user_label.config(text=f"Usuario: {user_name} - Seguridad: 0%")
 
                     if not recognized:
+                        # Si ninguna cara fue reconocida, muestra un mensaje de acceso denegado
                         cv2.putText(frame, "Acceso Denegado", (10, 30), 2, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
+                # Convierte el fotograma a formato compatible con Tkinter y lo muestra en el lienzo de la aplicación
                 photo = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
                 self.app.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
                 self.app.canvas.photo = photo
 
+                # Actualiza la interfaz de usuario
                 self.app.update_idletasks()
                 self.app.update()
 
@@ -113,5 +125,6 @@ class RecognitionSystem:
             print("Faces Names:", self.faces_names)
 
         finally:
+            # Cierra la aplicación cuando se termina el reconocimiento facial
             if self.app:
                 self.app.quit()
